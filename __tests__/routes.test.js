@@ -15,6 +15,6 @@ describe("Basic route tests", () => {
     const response = await request(server).get("/");
 
     expect(response.status).toEqual(200);
-    expect(response.text).toContain("Hello World!");
+    expect(response.text).toContain("买菜");
   });
 });

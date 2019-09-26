@@ -5,16 +5,18 @@
   "main": "app.js",
   "scripts": {
     "test": "jest --watchAll",
-    "dev": "nodemon app.js",
+    "dev": "nodemon --inspect-brk app.js",
     "prod": "node app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "knex": "^0.19.4",
     "koa": "^2.8.1",
     "koa-logger": "^3.2.1",
-    "koa-router": "^7.4.0"
+    "koa-router": "^7.4.0",
+    "mysql2": "^1.7.0"
   },
   "devDependencies": {
     "jest": "^24.9.0",
