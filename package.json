@@ -5,13 +5,14 @@
   "main": "app.js",
   "scripts": {
     "test": "jest --watchAll",
-    "dev": "nodemon --inspect-brk app.js",
+    "dev": "nodemon app.js",
     "prod": "node app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@koa/cors": "2",
     "knex": "^0.19.4",
     "koa": "^2.8.1",
     "koa-logger": "^3.2.1",

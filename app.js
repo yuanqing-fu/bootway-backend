@@ -1,8 +1,11 @@
 const Koa = require("koa");
+const cors = require('@koa/cors');
 const Router = require("koa-router");
 const logger = require("koa-logger");
 const app = new Koa();
 
+//CORS
+app.use(cors({origin:"http://test.com"}));
 
 // log all events to the terminal
 app.use(logger());
@@ -28,14 +31,14 @@ app.use(async (ctx, next) => {
   }
 });
 
-const router = new Router({
-  prefix: '/api/tasks'
+const taskRouter = new Router({
+  prefix: '/tasks'
 });
 
-require('./routes/tasks')(router,knex);
+require('./routes/tasks')(taskRouter,knex);
 
-app.use(router.routes());
-app.use(router.allowedMethods());
+app.use(taskRouter.routes());
+app.use(taskRouter.allowedMethods());
 
 
 const server = app.listen(3003);
