@@ -14,21 +14,21 @@ module.exports = (router,knex ) => {
     router.get("/", async (ctx, next) => {
       //todo 用户id是放在参数还是header里
       //get task list
-      ctx.body = await knex.select().table('task');
+      ctx.body = await knex.select().table('task')
     });
 
     router.get("/task", async (ctx, next) => {
         //todo 用户id是放在参数还是header里
         //get task list
-      ctx.body = await knex.select().table('task');
-      // ctx.body = result;
-    });
+      ctx.body = await knex.select().table('task')
+      // ctx.body = result
+    })
 
     router.post("/task", async (ctx, next) => {
         //create a task
-    });
+    })
 
     router.del("/task", async (ctx, next) => {
         //create a task
-    });
-};
+    })
+}

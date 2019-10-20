@@ -1,14 +1,16 @@
-const Koa = require("koa");
-const cors = require('@koa/cors');
-const Router = require("koa-router");
-const logger = require("koa-logger");
-const app = new Koa();
+const Koa = require("koa")
+const cors = require('@koa/cors')
+const Router = require("koa-router")
+const logger = require("koa-logger")
+
+const app = new Koa()
 
 //CORS
-app.use(cors({origin:"http://test.com"}));
+// app.use(cors({origin:"http://test.com"}))
+app.use(cors({origin:"http://localhost:3000"}))
 
 // log all events to the terminal
-app.use(logger());
+app.use(logger())
 
 const knex = require('knex')({
   client: 'mysql2',
@@ -23,24 +25,24 @@ const knex = require('knex')({
 // error handling
 app.use(async (ctx, next) => {
   try {
-    await next();
+    await next()
   } catch (err) {
-    ctx.status = err.status || 500;
-    ctx.body = err.message;
-    ctx.app.emit('error', err, ctx);
+    ctx.status = err.status || 500
+    ctx.body = err.message
+    ctx.app.emit('error', err, ctx)
   }
-});
+})
 
 const taskRouter = new Router({
   prefix: '/tasks'
-});
+})
 
-require('./routes/tasks')(taskRouter,knex);
+require('./routes/tasks')(taskRouter,knex)
 
-app.use(taskRouter.routes());
-app.use(taskRouter.allowedMethods());
+app.use(taskRouter.routes())
+app.use(taskRouter.allowedMethods())
 
 
-const server = app.listen(3003);
-module.exports = server;
+const server = app.listen(3003)
+module.exports = server
 
