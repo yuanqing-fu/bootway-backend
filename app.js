@@ -7,7 +7,7 @@ const app = new Koa()
 
 //CORS
 // app.use(cors({origin:"http://test.com"}))
-app.use(cors({origin:"http://localhost:3000"}))
+app.use(cors({origin:"http://bootway.com:3000"}))
 
 // log all events to the terminal
 app.use(logger())
