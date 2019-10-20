@@ -5,9 +5,11 @@ const logger = require("koa-logger")
 
 const app = new Koa()
 
+require('dotenv').config()
+
 //CORS
-// app.use(cors({origin:"http://test.com"}))
-app.use(cors({origin:"http://bootway.com:3000"}))
+app.use(cors({origin:process.env.DB_CROS_ORIGIN_1}))
+// app.use(cors({origin:"http://bootway.com:3000"}))
 
 // log all events to the terminal
 app.use(logger())
@@ -15,10 +17,10 @@ app.use(logger())
 const knex = require('knex')({
   client: 'mysql2',
   connection: {
-    host : '127.0.0.1',
-    user : 'root',
-    password : 'bootwaydatabase123',
-    database : 'bootway'
+    host : process.env.DB_HOST,
+    user : process.env.DB_USER,
+    password : process.env.DB_PASS,
+    database : process.env.DB_NAME
   }
 });
 
