@@ -3,7 +3,16 @@ const cors = require('koa2-cors')
 const Router = require('koa-router')
 const logger = require('koa-logger')
 
+const bodyParser = require('koa-bodyparser');
+
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
+// const auth = require('./services/auth/auth')
+const config = require('./config/config')
+
 const app = new Koa()
+
+app.use(bodyParser());
 
 require('dotenv').config()
 
@@ -13,9 +22,9 @@ app.use(
   cors({
       origin: function (ctx) {
 
-        const requestOrigin = (ctx.protocol+'://').concat(ctx.get('Origin').replace('http://', '').replace('https://', ''))
+        const requestOrigin = (ctx.protocol + '://').concat(ctx.get('Origin').replace('http://', '').replace('https://', ''))
 
-        const whiteList = [(ctx.protocol+'://').concat(process.env.DB_CROS_ORIGIN_1), (ctx.protocol+'://').concat(process.env.DB_CROS_ORIGIN_2)] //可跨域白名单
+        const whiteList = [(ctx.protocol + '://').concat(process.env.DB_CROS_ORIGIN_1), (ctx.protocol + '://').concat(process.env.DB_CROS_ORIGIN_2)] //可跨域白名单
 
         if (whiteList.includes(requestOrigin)) {
           return requestOrigin
@@ -29,15 +38,23 @@ app.use(
 // log all events to the terminal
 app.use(logger())
 
-const knex = require('knex')({
+const db = require('knex')({
   client: 'mysql2',
-  connection: {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME
-  }
+  connection: config.connection
 })
+
+const userRouter = new Router({
+  prefix: '/auth'
+})
+
+app.use(userRouter.routes())
+app.use(userRouter.allowedMethods())
+
+//authentication
+// app.use('./services/auth/auth', auth({ db, userRouter, bcrybt, jwt, jwtToken: config}))
+require('./services/auth/auth')({ db, userRouter, bcrypt, jwt, config})
+
+
 
 // error handling
 app.use(async (ctx, next) => {
@@ -54,7 +71,7 @@ const taskRouter = new Router({
   prefix: '/tasks'
 })
 
-require('./routes/tasks')(taskRouter, knex)
+require('./routes/tasks')(taskRouter, db)
 
 app.use(taskRouter.routes())
 app.use(taskRouter.allowedMethods())
