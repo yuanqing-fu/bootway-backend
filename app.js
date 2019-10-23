@@ -5,6 +5,8 @@ const logger = require('koa-logger')
 
 const bodyParser = require('koa-bodyparser');
 
+const auth = require('./middleware/auth');
+
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 // const auth = require('./services/auth/auth')
@@ -71,7 +73,7 @@ const taskRouter = new Router({
   prefix: '/tasks'
 })
 
-require('./routes/tasks')(taskRouter, db)
+require('./routes/tasks')(taskRouter, db, auth)
 
 app.use(taskRouter.routes())
 app.use(taskRouter.allowedMethods())

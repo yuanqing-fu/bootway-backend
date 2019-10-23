@@ -3,10 +3,10 @@ module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
     const email = ctx.request.body.email
     const password = ctx.request.body.password
 
-    // if (!email || !password) return ctx.response.status(400).json({
-    //   type: 'error',
-    //   message: 'email and password fields are essential for authentication.'
-    // })
+    if (!email || !password) {
+      ctx.response.status = 400
+      return ctx.body = { type: 'error', message: 'email and password fields are essential for authentication.' }
+    }
 
     let results = await db('users').where('email', email)
 
@@ -14,16 +14,15 @@ module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
 
     if (dbError) {
       ctx.response.status = 500
-      ctx.body = { type: 'error', message: 'database error' }
-      return
+      return ctx.body = { type: 'error', message: 'database error' }
     }
 
     // 没找到用户
     if (results.length === 0) {
       ctx.response.status = 403
       ctx.response.message = 'user not found'
-      ctx.body = { type: 'error', message: 'user not found' }
-      return
+      return ctx.body = { type: 'error', message: 'user not found' }
+
     }
 
     const user = results[0]
@@ -34,8 +33,8 @@ module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
       ctx.response.message = 'User logged in.'
       return ctx.body = {
         type: 'success',
-        user: { id: user.id, email: user.email },
-        token: jwt.sign({ id: user.id, email: user.email }, config.jwtToken, { expiresIn: '7d' })
+        user: { id: user.id, email: user.email, name:user.name },
+        token: jwt.sign({ id: user.id, email: user.email, name: user.name }, config.jwtToken, { expiresIn: '7d' })
       }
     } else {
       ctx.response.status = 500
@@ -45,7 +44,6 @@ module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
   })
 
   userRouter.get('/me', async (ctx) => {
-    console.log('^^^^^^^^^^^^', ctx.request.header['x-access-token'])
     const token = ctx.request.headers['x-access-token']
     if (!token) {
       ctx.response.status = 400
@@ -53,14 +51,20 @@ module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
       return ctx.body = { type: 'error', message: 'x-access-token header not found.' }
     }
 
-    const decoded = await jwt.verify(token, config.jwtToken)
-    console.log('**********', decoded)
+    let result = ""
 
-    if(1===1){
+    try {
+      result = await jwt.verify(token, config.jwtToken)
+    } catch (e) {
+      ctx.response.status = 403
+      return ctx.body = { type: 'error', message: 'Provided token is invalid.' }
+    }
+
+    if(result && result.email){
       return ctx.body = {
         type: 'success',
         message: 'Provided token is valid.',
-        decoded
+        result
       }
     }else {
       // 错误处理 if (error) return ctx.response.status(403).json({ type: 'error', message: 'Provided token is invalid.', error })

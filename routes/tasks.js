@@ -1,4 +1,4 @@
-module.exports = (router,knex ) => {
+module.exports = (router, knex, auth) => {
 
     //下面是todoist的restful API 例子
     // requests.get(
@@ -14,10 +14,14 @@ module.exports = (router,knex ) => {
     router.get("/", async (ctx, next) => {
       //todo 用户id是放在参数还是header里
       //get task list
-      ctx.body = await knex.select().table('task')
+      ctx = auth(ctx)
+      console.log('%%%%%%%%%%%%%%%%% task result... ', ctx)
+      if(ctx.body.type !== 'error'){
+        ctx.body = await knex.select().table('task')
+      }
     });
 
-    router.get("/task", async (ctx, next) => {
+    router.get("/task", auth, async (ctx, next) => {
         //todo 用户id是放在参数还是header里
         //get task list
       ctx.body = await knex.select().table('task')
