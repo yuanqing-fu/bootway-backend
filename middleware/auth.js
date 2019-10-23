@@ -1,29 +1,24 @@
 const jwt = require('jsonwebtoken')
-// const config = require('/config/config')
 
-module.exports = function (ctx) {
+module.exports = function (ctx, config) {
   const token = ctx.request.headers['x-access-token']
   if (!token) {
     ctx.response.status = 400
-    ctx.response.message = 'x-access-token header not found.'
-    ctx.body = { type: 'error', message: 'x-access-token header not found.' }
+    ctx.body = { type: 'error', message: 'Please login' }
   } else {
     let result = ''
 
     try {
-      // result = jwt.verify(token, config.jwtToken)
-      result = jwt.verify(token, '********************')
-      console.log('%%%%%%%%%%%%%%%%% jwt result... ', result)
+      result = jwt.verify(token, config.jwtToken)
     } catch (e) {
-      console.log('%%%%%%%%%%%%%%%%% e... ', e)
       ctx.response.status = 403
-      ctx.body = { type: 'error', message: 'Provided token is invalid.' }
+      ctx.body = { type: 'error', message: 'Token is invalid.' }
     }
 
     if (result && result.email) {
       ctx.body = {
         type: 'success',
-        message: 'Provided token is valid.',
+        message: 'Token is valid.',
         result
       }
     } else {

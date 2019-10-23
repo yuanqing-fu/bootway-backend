@@ -1,9 +1,9 @@
-module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
+module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
   userRouter.post('/login', async (ctx) => {
     const email = ctx.request.body.email
     const password = ctx.request.body.password
 
-    if (!email || !password) {
+    if (!email || !validator.isEmail(email) || !password) {
       ctx.response.status = 400
       return ctx.body = { type: 'error', message: 'email and password fields are essential for authentication.' }
     }
@@ -29,17 +29,71 @@ module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
 
     const match = await bcrypt.compare(password, user.password)
 
-    if (!match) {
+    if (match) {
       ctx.response.message = 'User logged in.'
+      await db('users')
+        .where({ id: user.id })
+        .update({ lastlogin_at: new Date() })
       return ctx.body = {
         type: 'success',
-        user: { id: user.id, email: user.email, name:user.name },
+        user: { id: user.id, email: user.email, name: user.name },
         token: jwt.sign({ id: user.id, email: user.email, name: user.name }, config.jwtToken, { expiresIn: '7d' })
       }
     } else {
       ctx.response.status = 500
       ctx.response.message = 'Password is incorrect.'
       return ctx.body = { type: 'error', message: 'Password is incorrect.' }
+    }
+  })
+
+  userRouter.post('/register', async (ctx) => {
+    const name = ctx.request.body.name
+    const email = ctx.request.body.email
+    const password = ctx.request.body.password
+
+    if (!name || !email || !validator.isEmail(email) || !password) {
+      ctx.response.status = 400
+      return ctx.body = { type: 'error', message: 'name, email and password fields are essential.' }
+    }
+
+    let results = await db('users').where('email', email)
+
+    let dbError = false //todo 数据库错误处理
+
+    if (dbError) {
+      ctx.response.status = 500
+      return ctx.body = { type: 'error', message: 'database error' }
+    }
+
+    // 找到相同账号，不能注册
+    if (results.length !== 0) {
+      ctx.response.status = 403
+      ctx.response.message = 'user already registered'
+      return ctx.body = { type: 'error', message: 'user already registered' }
+    }
+
+    const user = {
+      name: name,
+      email: email,
+      created_at: new Date(),
+      lastlogin_at: new Date()
+    }
+
+    user.password = await bcrypt.hash(password, 10)
+
+    let registerResults = await db('users').insert(user)
+
+    if (registerResults && registerResults.length === 1) {
+      ctx.response.message = 'User registered.'
+      return ctx.body = {
+        type: 'success',
+        user: { id: registerResults[0], email: user.email, name: user.name },
+        token: jwt.sign({ id: user.id, email: user.email, name: user.name }, config.jwtToken, { expiresIn: '7d' })
+      }
+    } else {
+      ctx.response.status = 500
+      ctx.response.message = 'Register failed.'
+      return ctx.body = { type: 'error', message: 'Register failed.' }
     }
   })
 
@@ -51,7 +105,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
       return ctx.body = { type: 'error', message: 'x-access-token header not found.' }
     }
 
-    let result = ""
+    let result = ''
 
     try {
       result = await jwt.verify(token, config.jwtToken)
@@ -60,13 +114,13 @@ module.exports = ({ db, userRouter, bcrypt, jwt, config }) => {
       return ctx.body = { type: 'error', message: 'Provided token is invalid.' }
     }
 
-    if(result && result.email){
+    if (result && result.email) {
       return ctx.body = {
         type: 'success',
         message: 'Provided token is valid.',
         result
       }
-    }else {
+    } else {
       // 错误处理 if (error) return ctx.response.status(403).json({ type: 'error', message: 'Provided token is invalid.', error })
     }
 

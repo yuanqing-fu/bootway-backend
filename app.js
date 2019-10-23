@@ -4,6 +4,7 @@ const Router = require('koa-router')
 const logger = require('koa-logger')
 
 const bodyParser = require('koa-bodyparser');
+const validator = require('validator')
 
 const auth = require('./middleware/auth');
 
@@ -54,7 +55,7 @@ app.use(userRouter.allowedMethods())
 
 //authentication
 // app.use('./services/auth/auth', auth({ db, userRouter, bcrybt, jwt, jwtToken: config}))
-require('./services/auth/auth')({ db, userRouter, bcrypt, jwt, config})
+require('./services/auth/auth')({ db, userRouter, bcrypt, jwt, validator, config})
 
 
 
@@ -73,7 +74,7 @@ const taskRouter = new Router({
   prefix: '/tasks'
 })
 
-require('./routes/tasks')(taskRouter, db, auth)
+require('./routes/tasks')(taskRouter, db, auth, config)
 
 app.use(taskRouter.routes())
 app.use(taskRouter.allowedMethods())
