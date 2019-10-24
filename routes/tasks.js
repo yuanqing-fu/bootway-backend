@@ -1,15 +1,5 @@
 module.exports = (router, db, auth, config) => {
 
-  //下面是todoist的restful API 例子
-  // requests.get(
-  //     "https://api.todoist.com/rest/v1/tasks",
-  //     params={
-  //         "project_id": 123
-  //     },
-  //     headers={
-  //         "Authorization": "Bearer %s" % your_token
-  //     }).json()
-
   //  获得当前用户任务列表
   router.get('/', async (ctx, next) => {
     ctx = auth(ctx, config)

@@ -81,6 +81,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
 
     user.password = await bcrypt.hash(password, 10)
 
+    // 将新用户加入数据库，返回用户 ID
     let registerResults = await db('users').insert(user)
 
     if (registerResults && registerResults.length === 1) {
@@ -88,7 +89,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
       return ctx.body = {
         type: 'success',
         user: { id: registerResults[0], email: user.email, name: user.name },
-        token: jwt.sign({ id: user.id, email: user.email, name: user.name }, config.jwtToken, { expiresIn: '7d' })
+        token: jwt.sign({ id: registerResults[0], email: user.email, name: user.name }, config.jwtToken, { expiresIn: '7d' })
       }
     } else {
       ctx.response.status = 500
