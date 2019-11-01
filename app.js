@@ -13,6 +13,8 @@ const bcrypt = require('bcrypt')
 // const auth = require('./services/auth/auth')
 const config = require('./config/config')
 
+const moment = require('moment')
+
 const app = new Koa()
 
 app.use(bodyParser());
@@ -74,7 +76,7 @@ const taskRouter = new Router({
   prefix: '/tasks'
 })
 
-require('./routes/tasks')(taskRouter, db, auth, config)
+require('./routes/tasks')(taskRouter, db, auth, moment, config)
 
 app.use(taskRouter.routes())
 app.use(taskRouter.allowedMethods())

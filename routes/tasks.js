@@ -1,11 +1,15 @@
-module.exports = (router, db, auth, config) => {
+module.exports = (router, db, auth, moment, config) => {
 
   //  获得当前用户任务列表
-  router.get('/', async (ctx, next) => {
+  router.get('/:start_date', async (ctx, next) => {
     ctx = auth(ctx, config)
 
     if (ctx.body.type !== 'error') {
-      ctx.body = await db('task').where('user_id', ctx.body.result.id)
+      let startDate = new Date(ctx.params.start_date)
+      let endDate = moment(startDate).add(1, 'day').toDate()
+      ctx.body = await db('task').where({
+        'user_id': ctx.body.result.id
+      }).andWhereBetween('start_date', [startDate, endDate])
     }
   })
 
@@ -18,7 +22,7 @@ module.exports = (router, db, auth, config) => {
       const urgent = ctx.request.body.urgent
       const start_date = ctx.request.body.start_date
 
-      console.log(name,important,urgent,new Date(start_date))
+      console.log(name, important, urgent, new Date(start_date))
       ctx.request.body.start_date = new Date(start_date)
       ctx.request.body.user_id = ctx.body.result.id
       ctx.request.body.done = false
