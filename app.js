@@ -1,4 +1,5 @@
 const Koa = require('koa')
+const helmet = require('koa-helmet')
 const cors = require('koa2-cors')
 const Router = require('koa-router')
 const logger = require('koa-logger')
@@ -17,7 +18,20 @@ const moment = require('moment')
 
 const app = new Koa()
 
-app.use(bodyParser());
+// DOC: https://github.com/venables/koa-helmet
+app.use(helmet())
+
+// {
+//   dnsPrefetchControl: true,
+//     frameguard: true,
+//   hidePoweredBy: true,
+//   hsts: true,
+//   ieNoOpen: true,
+//   noSniff: true,
+//   xssFilter: true
+// }
+
+app.use(bodyParser())
 
 require('dotenv').config()
 

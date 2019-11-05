@@ -19,6 +19,7 @@
     "knex": "^0.19.4",
     "koa": "^2.8.1",
     "koa-bodyparser": "^4.2.1",
+    "koa-helmet": "^5.2.0",
     "koa-logger": "^3.2.1",
     "koa-router": "^7.4.0",
     "koa2-cors": "^2.0.6",

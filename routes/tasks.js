@@ -27,25 +27,17 @@ module.exports = (router, db, auth, moment, config) => {
   })
 
   // 编辑任务
-  router.put('/', async (ctx, next) => {
+  router.patch('/', async (ctx, next) => {
     ctx = auth(ctx, config)
     if (ctx.body.type !== 'error') {
-      const task_id = ctx.request.body.task_id
-      const task_name = ctx.request.body.task_name
-      const done = ctx.request.body.done
-      const important = ctx.request.body.important
-      const urgent = ctx.request.body.urgent
-      const start_date = ctx.request.body.start_date
-
-      ctx.request.body.start_date = new Date(ctx.request.body.start_date)
+      if(ctx.request.body.start_date) {
+        ctx.request.body.start_date = new Date(ctx.request.body.start_date)
+      }
 
       ctx.body = await db('task').where({
         'task_id': ctx.request.body.task_id
       }).update(ctx.request.body)
-      // ctx.request.body.start_date = new Date(start_date)
-      // ctx.request.body.user_id = ctx.body.result.id
-      // ctx.request.body.done = false
-      // ctx.body = await db('task').insert(ctx.request.body)
+
     }
   })
 
