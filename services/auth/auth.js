@@ -33,7 +33,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
       ctx.response.message = 'User logged in.'
       await db('users')
         .where({ id: user.id })
-        .update({ lastlogin_at: new Date() })
+        .update({ last_login_at: new Date() })
       return ctx.body = {
         type: 'success',
         user: { id: user.id, email: user.email, name: user.name },
@@ -76,7 +76,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
       name: name,
       email: email,
       created_at: new Date(),
-      lastlogin_at: new Date()
+      last_login_at: new Date()
     }
 
     user.password = await bcrypt.hash(password, 10)

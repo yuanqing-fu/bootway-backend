@@ -10,7 +10,8 @@ module.exports = (router, db, auth, moment, config) => {
       let endDate = moment(startDate).add(1, 'day').toDate()
       endDate.setHours(0, 0, 0)
       ctx.body = await db('task').where({
-        'user_id': ctx.body.result.id
+        'user_id': ctx.body.result.id,
+        'deleted': 0
       }).andWhereBetween('start_date', [startDate, endDate])
     }
   })
@@ -20,6 +21,7 @@ module.exports = (router, db, auth, moment, config) => {
     ctx = auth(ctx, config)
     if (ctx.body.type !== 'error') {
       ctx.request.body.start_date = new Date(ctx.request.body.start_date)
+      ctx.request.body.created_at = new Date()
       ctx.request.body.user_id = ctx.body.result.id
       ctx.request.body.done = false
       ctx.body = await db('task').insert(ctx.request.body)
@@ -34,6 +36,7 @@ module.exports = (router, db, auth, moment, config) => {
         ctx.request.body.start_date = new Date(ctx.request.body.start_date)
       }
 
+      ctx.request.body.last_update_at = new Date()
       ctx.body = await db('task').where({
         'task_id': ctx.request.body.task_id
       }).update(ctx.request.body)
@@ -42,12 +45,17 @@ module.exports = (router, db, auth, moment, config) => {
   })
 
   // 删除任务
-  router.del('/:task_id', async (ctx, next) => {
+  router.del('/', async (ctx, next) => {
     ctx = auth(ctx, config)
-  })
+    if (ctx.body.type !== 'error') {
+      console.log('dfsdfsd ', ctx.request.body)
+      ctx.request.body.deleted_at = new Date()
+      ctx.request.body.deleted = 1
+      ctx.body = await db('task').where({
+        'task_id': ctx.request.body.task_id
+      }).update(ctx.request.body)
 
-  // router.get("/:id", auth, async (ctx, next) => {
-  //
-  // })
+    }
+  })
 
 }
