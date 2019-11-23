@@ -48,7 +48,6 @@ module.exports = (router, db, auth, moment, config) => {
   router.del('/', async (ctx, next) => {
     ctx = auth(ctx, config)
     if (ctx.body.type !== 'error') {
-      console.log('dfsdfsd ', ctx.request.body)
       ctx.request.body.deleted_at = new Date()
       ctx.request.body.deleted = 1
       ctx.body = await db('task').where({

@@ -1,4 +1,6 @@
-module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
+module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
+// errorCode: 0 未注册
+// errorCode: 1 注册未验证邮箱
   userRouter.post('/login', async (ctx) => {
     const email = ctx.request.body.email
     const password = ctx.request.body.password
@@ -8,7 +10,9 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
       return ctx.body = { type: 'error', message: 'email and password fields are essential for authentication.' }
     }
 
-    let results = await db('users').where('email', email)
+    let results = await db('users').where({
+      'email': email
+    })
 
     let dbError = false //todo 数据库错误处理
 
@@ -19,10 +23,13 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
 
     // 没找到用户
     if (results.length === 0) {
-      ctx.response.status = 403
+      ctx.response.status = 200
       ctx.response.message = 'user not found'
-      return ctx.body = { type: 'error', message: 'user not found' }
-
+      return ctx.body = { errorCode: 0, type: 'error', message: 'user not found' }
+    } else if (results[0].verified === 0) {
+      ctx.response.status = 200
+      ctx.response.message = 'user not verified'
+      return ctx.body = { errorCode: 1, type: 'error', message: 'user not verified' }
     }
 
     const user = results[0]
@@ -46,7 +53,44 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
     }
   })
 
+  userRouter.post('/email-verification', async (ctx) => {
+    // 验证用户点击的链接里的token是否正确
+    const token = ctx.request.body.token
+    if (!token) {
+      ctx.response.status = 400
+      ctx.response.message = 'Provided token is invalid.'
+      return ctx.body = { type: 'error', message: 'Provided token is invalid.' }
+    }
+
+    let result = ''
+
+    try {
+      result = await jwt.verify(token, config.jwtTokenForEmailVerification)
+
+      // 验证成功直接让用户登录 并且在数据库里更改user的 verified:1
+      const dbResult = await db('users')
+        .where({ id: result.id, verified: 0 })
+        .update({ verified: 1 })
+
+      ctx.response.message = 'Email verified.'
+      return ctx.body = {
+        type: 'success',
+        user: { id: result.id, email: result.email, name: result.name },
+        token: jwt.sign({
+          id: result.id,
+          email: result.email,
+          name: result.name
+        }, config.jwtToken, { expiresIn: '7d' })
+      }
+    } catch (e) {
+      ctx.response.status = 403
+      return ctx.body = { type: 'error', message: 'Provided token is invalid.' }
+    }
+
+  })
+
   userRouter.post('/register', async (ctx) => {
+    const clientMainURL = ctx.request.header.origin
     const name = ctx.request.body.name
     const email = ctx.request.body.email
     const password = ctx.request.body.password
@@ -67,11 +111,18 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
 
     // 找到相同账号，不能注册
     if (results.length !== 0) {
-      ctx.response.status = 403
-      ctx.response.message = 'user already registered'
-      return ctx.body = { type: 'error', message: 'user already registered' }
+      if (results[0].verified === 0) {
+        ctx.response.status = 200
+        ctx.response.message = 'user not verified'
+        return ctx.body = { errorCode: 1, type: 'error', message: 'user not verified' }
+      } else {
+        ctx.response.status = 403
+        ctx.response.message = 'user already registered'
+        return ctx.body = { type: 'error', message: 'user already registered' }
+      }
     }
 
+    // 允许注册
     const user = {
       name: name,
       email: email,
@@ -79,17 +130,31 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
       last_login_at: new Date()
     }
 
+    // 加密密码
     user.password = await bcrypt.hash(password, 10)
 
     // 将新用户加入数据库，返回用户 ID
     let registerResults = await db('users').insert(user)
 
     if (registerResults && registerResults.length === 1) {
-      ctx.response.message = 'User registered.'
-      return ctx.body = {
-        type: 'success',
-        user: { id: registerResults[0], email: user.email, name: user.name },
-        token: jwt.sign({ id: registerResults[0], email: user.email, name: user.name }, config.jwtToken, { expiresIn: '7d' })
+      // 注册成功，此处需要发送注册成功激活邮件
+      const token = jwt.sign({
+        id: registerResults[0],
+        email: user.email,
+        name: user.name
+      }, config.jwtTokenForEmailVerification, { expiresIn: '1d' })
+
+      // 发送邮件
+      let emailSendingResult = await Mail.sendEmailVerificationForNewUser('kofbossyagami@163.com', clientMainURL, token)
+
+      if (emailSendingResult !== 'failed') {
+        ctx.response.status = 200
+        ctx.response.message = 'Email sent.'
+        return ctx.body = { type: 'success', message: 'Email sent.' }
+      } else {
+        ctx.response.status = 500
+        ctx.response.message = 'Email sent failed.'
+        return ctx.body = { type: 'error', message: 'Email sent failed.' }
       }
     } else {
       ctx.response.status = 500
@@ -98,7 +163,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
     }
   })
 
-  userRouter.get('/me', async (ctx) => {
+  userRouter.post('/authenticate', async (ctx) => {
     const token = ctx.request.headers['x-access-token']
     if (!token) {
       ctx.response.status = 400
@@ -110,19 +175,17 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, config }) => {
 
     try {
       result = await jwt.verify(token, config.jwtToken)
+
+      if (result && result.email) {
+        return ctx.body = {
+          type: 'success',
+          message: 'Provided token is valid.',
+          result
+        }
+      }
     } catch (e) {
       ctx.response.status = 403
       return ctx.body = { type: 'error', message: 'Provided token is invalid.' }
-    }
-
-    if (result && result.email) {
-      return ctx.body = {
-        type: 'success',
-        message: 'Provided token is valid.',
-        result
-      }
-    } else {
-      // 错误处理 if (error) return ctx.response.status(403).json({ type: 'error', message: 'Provided token is invalid.', error })
     }
 
   })

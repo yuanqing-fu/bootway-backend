@@ -8,6 +8,7 @@ const bodyParser = require('koa-bodyparser');
 const validator = require('validator')
 
 const auth = require('./middleware/auth');
+const Mail = require('./middleware/mail');
 
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
@@ -35,15 +36,14 @@ app.use(bodyParser())
 
 require('dotenv').config()
 
-//CORS
-// process.env.DB_CROS_ORIGIN_2
+// 跨域处理 CORS
 app.use(
   cors({
       origin: function (ctx) {
 
         const requestOrigin = (ctx.protocol + '://').concat(ctx.get('Origin').replace('http://', '').replace('https://', ''))
 
-        const whiteList = [(ctx.protocol + '://').concat(process.env.DB_CROS_ORIGIN_1), (ctx.protocol + '://').concat(process.env.DB_CROS_ORIGIN_2)] //可跨域白名单
+        const whiteList = [(ctx.protocol + '://').concat(config.CROS_ORIGIN_1), (ctx.protocol + '://').concat(config.CROS_ORIGIN_2)] //可跨域白名单
 
         if (whiteList.includes(requestOrigin)) {
           return requestOrigin
@@ -59,7 +59,7 @@ app.use(logger())
 
 const db = require('knex')({
   client: 'mysql2',
-  connection: config.connection
+  connection: config.dbConnection
 })
 
 const userRouter = new Router({
@@ -71,7 +71,7 @@ app.use(userRouter.allowedMethods())
 
 //authentication
 // app.use('./services/auth/auth', auth({ db, userRouter, bcrybt, jwt, jwtToken: config}))
-require('./services/auth/auth')({ db, userRouter, bcrypt, jwt, validator, config})
+require('./services/auth/auth')({ db, userRouter, bcrypt, jwt, validator, Mail, config})
 
 
 
