@@ -53,8 +53,8 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
     }
   })
 
+  // 验证用户点击的邮箱验证链接里的 token 是否正确
   userRouter.post('/email-verification', async (ctx) => {
-    // 验证用户点击的链接里的token是否正确
     const token = ctx.request.body.token
     if (!token) {
       ctx.response.status = 400
@@ -89,6 +89,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
 
   })
 
+  // 用户注册
   userRouter.post('/register', async (ctx) => {
     const clientMainURL = ctx.request.header.origin
     const name = ctx.request.body.name
@@ -161,6 +162,47 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
       ctx.response.message = 'Register failed.'
       return ctx.body = { type: 'error', message: 'Register failed.' }
     }
+  })
+
+  // 用户手动点击再次发送邮箱验证链接
+  userRouter.post('/send-verification-email', async (ctx) => {
+    const clientMainURL = ctx.request.header.origin
+    const email = ctx.request.body.email
+
+    if (!email || !validator.isEmail(email)) {
+      ctx.response.status = 400
+      return ctx.body = { type: 'error', message: 'no email provided' }
+    }
+
+    let results = await db('users').where({ email: email, verified: 0 })
+
+    console.log('results[0]', results[0])
+    // 找到没有验证的用户
+    if (results.length !== 0) {
+      const token = jwt.sign({
+        id: results[0].id,
+        email: results[0].email,
+        name: results[0].name
+      }, config.jwtTokenForEmailVerification, { expiresIn: '1d' })
+
+      // 发送邮件
+      let emailSendingResult = await Mail.sendEmailVerificationForNewUser('kofbossyagami@163.com', clientMainURL, token)
+
+      if (emailSendingResult !== 'failed') {
+        ctx.response.status = 200
+        ctx.response.message = 'Email sent.'
+        return ctx.body = { type: 'success', message: 'Email sent.' }
+      } else {
+        ctx.response.status = 500
+        ctx.response.message = 'Email sent failed.'
+        return ctx.body = { type: 'error', message: 'Email sent failed.' }
+      }
+    } else {
+      ctx.response.status = 403
+      ctx.response.message = 'user already verified'
+      return ctx.body = { type: 'error', message: 'user already verified' }
+    }
+
   })
 
   userRouter.post('/authenticate', async (ctx) => {
