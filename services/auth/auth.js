@@ -103,24 +103,17 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
 
     let results = await db('users').where('email', email)
 
-    let dbError = false //todo 数据库错误处理
-
-    if (dbError) {
-      ctx.response.status = 500
-      return ctx.body = { type: 'error', message: 'database error' }
-    }
-
     // 找到相同账号，不能注册
     if (results.length !== 0) {
-      if (results[0].verified === 0) {
-        ctx.response.status = 200
-        ctx.response.message = 'user not verified'
-        return ctx.body = { errorCode: 1, type: 'error', message: 'user not verified' }
-      } else {
-        ctx.response.status = 403
-        ctx.response.message = 'user already registered'
-        return ctx.body = { type: 'error', message: 'user already registered' }
-      }
+      // if (results[0].verified === 0) {
+      //   ctx.response.status = 200
+      //   ctx.response.message = 'user not verified'
+      //   return ctx.body = { errorCode: 1, type: 'error', message: 'user not verified' }
+      // } else {
+      ctx.response.status = 403
+      ctx.response.message = 'user already registered'
+      return ctx.body = { type: 'error', message: 'user already registered' }
+      // }
     }
 
     // 允许注册
@@ -176,7 +169,6 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
 
     let results = await db('users').where({ email: email, verified: 0 })
 
-    console.log('results[0]', results[0])
     // 找到没有验证的用户
     if (results.length !== 0) {
       const token = jwt.sign({
@@ -203,6 +195,87 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
       return ctx.body = { type: 'error', message: 'user already verified' }
     }
 
+  })
+
+  // 发送重置密码邮件验证链接
+  userRouter.post('/send-reset-password-email', async (ctx) => {
+    const clientMainURL = ctx.request.header.origin
+    const email = ctx.request.body.email
+
+    if (!email || !validator.isEmail(email)) {
+      ctx.response.status = 400
+      return ctx.body = { type: 'error', message: 'no email provided' }
+    }
+
+    let results = await db('users').where({ email: email })
+
+    if (results.length !== 0) {
+      // 已注册，未验证
+      if (results[0].verified === 0) {
+        ctx.response.status = 200
+        ctx.response.message = 'user not verified'
+        return ctx.body = { errorCode: 1, type: 'error', message: 'user not verified' }
+      } else {
+        const token = jwt.sign({
+          id: results[0].id,
+          email: results[0].email,
+          name: results[0].name
+        }, config.jwtTokenForPasswordReset, { expiresIn: 20 * 60 })
+
+        // 发送邮件
+        let emailSendingResult = await Mail.sendResetPasswordEmail('kofbossyagami@163.com', clientMainURL, token)
+
+        if (emailSendingResult !== 'failed') {
+          ctx.response.status = 200
+          ctx.response.message = 'Email sent.'
+          return ctx.body = { type: 'success', message: 'Email sent.' }
+        } else {
+          ctx.response.status = 500
+          ctx.response.message = 'Email sent failed.'
+          return ctx.body = { type: 'error', message: 'Email sent failed.' }
+        }
+      }
+    } else {
+      // 未注册
+      ctx.response.status = 200
+      ctx.response.message = 'user not registered'
+      return ctx.body = { errorCode: 0, type: 'error', message: 'user not registered' }
+    }
+  })
+
+  // 重置密码
+  userRouter.patch('/reset-password', async (ctx, next) => {
+    // 验证 token 是否合法
+    const token = ctx.request.body.token
+    const password = ctx.request.body.password
+    if (!token || !password) {
+      ctx.response.status = 200
+      ctx.response.message = 'Provided token is invalid.'
+      return ctx.body = { type: 'error', message: 'Provided token is invalid.' }
+    }
+
+    let result = ''
+
+    try {
+      result = await jwt.verify(token, config.jwtTokenForPasswordReset)
+
+      // 加密密码
+      const newPassword = await bcrypt.hash(password, 10)
+
+      // 验证成功更新密码
+      await db('users')
+        .where({ id: result.id, verified: 1 })
+        .update({ password: newPassword })
+
+      ctx.response.message = 'password reset.'
+      return ctx.body = {
+        type: 'success',
+        message: 'password reset.'
+      }
+    } catch (e) {
+      ctx.response.status = 200
+      return ctx.body = { type: 'error', message: 'Provided token is invalid.' }
+    }
   })
 
   userRouter.post('/authenticate', async (ctx) => {

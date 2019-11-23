@@ -5,6 +5,7 @@ module.exports = {
   CROS_ORIGIN_2: process.env.CROS_ORIGIN_2,
   jwtToken: process.env.jwtToken,
   jwtTokenForEmailVerification: process.env.jwtTokenForEmailVerification,
+  jwtTokenForPasswordReset: process.env.jwtTokenForPasswordReset,
   dbConnection: {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
