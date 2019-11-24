@@ -52,7 +52,7 @@ require('dotenv').config()
 //       }
 //     }
 //   ))
-app.use(cors({origin:"http://bootway.com"}))
+app.use(cors({origin:"http://*.bootway.com"}))
 
 // log all events to the terminal
 app.use(logger())
