@@ -43,8 +43,6 @@ app.use(
 
         const whiteList = [(ctx.protocol + '://').concat(config.CROS_ORIGIN_1), (ctx.protocol + '://').concat(config.CROS_ORIGIN_2)] //可跨域白名单
 
-        console.log('config.CROS_ORIGIN_1=', config.CROS_ORIGIN_1)
-
         if (whiteList.includes(requestOrigin)) {
           return requestOrigin
         }
