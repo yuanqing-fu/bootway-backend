@@ -1,4 +1,6 @@
 const DOTENV = require('dotenv').config()
+console.log('require(\'dotenv\').config()=', require('dotenv').config())
+console.log('DOTENV=', DOTENV)
 console.log('DOTENV.parsed.CROS_ORIGIN_1=', DOTENV.parsed.CROS_ORIGIN_1)
 module.exports = {
   CROS_ORIGIN_1: DOTENV.parsed.CROS_ORIGIN_1,
