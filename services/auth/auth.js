@@ -139,7 +139,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
       }, config.jwtTokenForEmailVerification, { expiresIn: '1d' })
 
       // 发送邮件
-      let emailSendingResult = await Mail.sendEmailVerificationForNewUser('kofbossyagami@163.com', clientMainURL, token)
+      let emailSendingResult = await Mail.sendEmailVerificationForNewUser(email, clientMainURL, token)
 
       if (emailSendingResult !== 'failed') {
         ctx.response.status = 200
@@ -178,7 +178,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
       }, config.jwtTokenForEmailVerification, { expiresIn: '1d' })
 
       // 发送邮件
-      let emailSendingResult = await Mail.sendEmailVerificationForNewUser('kofbossyagami@163.com', clientMainURL, token)
+      let emailSendingResult = await Mail.sendEmailVerificationForNewUser(email, clientMainURL, token)
 
       if (emailSendingResult !== 'failed') {
         ctx.response.status = 200
@@ -223,7 +223,7 @@ module.exports = ({ db, userRouter, bcrypt, jwt, validator, Mail, config }) => {
         }, config.jwtTokenForPasswordReset, { expiresIn: 20 * 60 })
 
         // 发送邮件
-        let emailSendingResult = await Mail.sendResetPasswordEmail('kofbossyagami@163.com', clientMainURL, token)
+        let emailSendingResult = await Mail.sendResetPasswordEmail(email, clientMainURL, token)
 
         if (emailSendingResult !== 'failed') {
           ctx.response.status = 200
