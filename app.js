@@ -34,8 +34,6 @@ app.use(helmet())
 
 app.use(bodyParser())
 
-require('dotenv').config()
-
 // 跨域处理 CORS
 app.use(
   cors({
@@ -55,7 +53,7 @@ app.use(
       }
     }
   ))
-// app.use(cors({origin:"http://*.bootway.com"}))
+// app.use(cors({origin:"http://www.bootway.com"}))
 
 // log all events to the terminal
 app.use(logger())
