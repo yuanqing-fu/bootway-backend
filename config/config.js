@@ -1,4 +1,4 @@
-require('dotenv').config()
+console.log('sdfsdf ', require('dotenv').config())
 
 module.exports = {
   CROS_ORIGIN_1: process.env.CROS_ORIGIN_1,
