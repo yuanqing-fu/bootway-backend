@@ -37,22 +37,22 @@ app.use(bodyParser())
 require('dotenv').config()
 
 // 跨域处理 CORS
-app.use(
-  cors({
-      origin: function (ctx) {
-
-        const requestOrigin = (ctx.protocol + '://').concat(ctx.get('Origin').replace('http://', '').replace('https://', ''))
-
-        const whiteList = [(ctx.protocol + '://').concat(config.CROS_ORIGIN_1), (ctx.protocol + '://').concat(config.CROS_ORIGIN_2)] //可跨域白名单
-
-        if (whiteList.includes(requestOrigin)) {
-          return requestOrigin
-        }
-        return false
-      }
-    }
-  ))
-// app.use(cors({origin:"http://bootway.com:3000"}))
+// app.use(
+//   cors({
+//       origin: function (ctx) {
+//
+//         const requestOrigin = (ctx.protocol + '://').concat(ctx.get('Origin').replace('http://', '').replace('https://', ''))
+//
+//         const whiteList = [(ctx.protocol + '://').concat(config.CROS_ORIGIN_1), (ctx.protocol + '://').concat(config.CROS_ORIGIN_2)] //可跨域白名单
+//
+//         if (whiteList.includes(requestOrigin)) {
+//           return requestOrigin
+//         }
+//         return false
+//       }
+//     }
+//   ))
+app.use(cors({origin:"http://bootway.com"}))
 
 // log all events to the terminal
 app.use(logger())
