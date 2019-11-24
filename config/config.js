@@ -1,24 +1,24 @@
-console.log('sdfsdf ', require('dotenv').config())
+const DOTENV = require('dotenv').config()
 
 module.exports = {
-  CROS_ORIGIN_1: process.env.CROS_ORIGIN_1,
-  CROS_ORIGIN_2: process.env.CROS_ORIGIN_2,
-  jwtToken: process.env.jwtToken,
-  jwtTokenForEmailVerification: process.env.jwtTokenForEmailVerification,
-  jwtTokenForPasswordReset: process.env.jwtTokenForPasswordReset,
+  CROS_ORIGIN_1: DOTENV.parsed.CROS_ORIGIN_1,
+  CROS_ORIGIN_2: DOTENV.parsed.CROS_ORIGIN_2,
+  jwtToken: DOTENV.parsed.jwtToken,
+  jwtTokenForEmailVerification: DOTENV.parsed.jwtTokenForEmailVerification,
+  jwtTokenForPasswordReset: DOTENV.parsed.jwtTokenForPasswordReset,
   dbConnection: {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME
+    host: DOTENV.parsed.DB_HOST,
+    user: DOTENV.parsed.DB_USER,
+    password: DOTENV.parsed.DB_PASS,
+    database: DOTENV.parsed.DB_NAME
   },
   smtpEmail: {
-    host: process.env.SMTP_EMAIL_HOST,
-    port: process.env.SMTP_EMAIL_PORT,
+    host: DOTENV.parsed.SMTP_EMAIL_HOST,
+    port: DOTENV.parsed.SMTP_EMAIL_PORT,
     secureConnection: true,
     auth: {
-      user: process.env.SMTP_EMAIL_USER,
-      pass: process.env.SMTP_EMAIL_PASS,
+      user: DOTENV.parsed.SMTP_EMAIL_USER,
+      pass: DOTENV.parsed.SMTP_EMAIL_PASS,
     }
   }
 }
