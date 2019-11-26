@@ -38,11 +38,11 @@ app.use(bodyParser())
 app.use(
   cors({
       origin: function (ctx) {
-        console.log('ctx = ', ctx)
-        console.log('ctx.protocol = ', ctx.protocol)
-        const requestOrigin = (ctx.protocol + '://').concat(ctx.get('Origin').replace('http://', '').replace('https://', ''))
+        const protocol = ctx.get('Origin').split('://')[0]
 
-        const whiteList = [(ctx.protocol + '://').concat(config.CROS_ORIGIN_1), (ctx.protocol + '://').concat(config.CROS_ORIGIN_2)] //可跨域白名单
+        const requestOrigin = (protocol + '://').concat(ctx.get('Origin').replace('http://', '').replace('https://', ''))
+
+        const whiteList = [(protocol + '://').concat(config.CROS_ORIGIN_1), (protocol + '://').concat(config.CROS_ORIGIN_2)] //可跨域白名单
 
         if (whiteList.includes(requestOrigin)) {
           return requestOrigin
