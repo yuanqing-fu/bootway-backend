@@ -18,7 +18,7 @@ module.exports = {
       console.log('sending email ok ')
     } catch (e) {
       console.log('sending email error ', e)
-      result = 'failed'
+      result = 'failed '
     }
 
     return result
